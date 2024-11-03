@@ -23,3 +23,43 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+## Problem 1
+
+Let's put people in a room. Going to assume that no one was born on leap day and birthdays are normally distributed across the year.
+
+Create a function for size (n) that will tell us if there is a duplicate birthday in the group.
+```{r}
+bday_sim = function(n) {
+  
+  bdays = sample(1:365, size = n, replace = TRUE)
+
+  duplicate = length(unique(bdays)) < n
+  
+  return(duplicate)
+  
+}
+
+bday_sim(50)
+```
+
+Now let's iterate this for 2 to 50 people in the room. Then iterate 10,000 times, saving each in a data frame. 
+```{r}
+sim_res = 
+  expand_grid(
+    n = c(2:50),
+    iter = 1:10000
+  ) |>
+  mutate(res = map_lgl(n, bday_sim)) |>
+  group_by(n) |>
+  summarize(prob = mean(res))
+```
+
+Now let's plot the results as a function of n. We see that as n increases the probability of having two people in the same room having the same birthday also increases. after about only 22 people are in the room our chance of success is about 50%.
+```{r}
+sim_res |>
+  ggplot(aes(x = n, y = prob)) +
+  geom_line() +
+  labs(title = "Probability of Having the Same Bday")
+```
+
+## Problem 2
