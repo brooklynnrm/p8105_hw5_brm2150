@@ -62,4 +62,29 @@ sim_res |>
   labs(title = "Probability of Having the Same Bday")
 ```
 
+
 ## Problem 2
+
+Let's create a function for creating a normal distribution and then doing a t.test.
+```{r}
+rnorm_t.test = function(u){
+  
+  samp = rnorm(n = 30, mean = u, sd = 5)
+  
+  broom::tidy(t.test(samp, conf.level = 0.95))
+}
+
+rnorm_t.test(u=0)
+```
+
+Now let's create a simulation for different mu values and 5000 iterations each.
+```{r}
+sim_samp = 
+  expand_grid(
+    mean = 0:5,
+    iter = 5000) |>
+  mutate(samp = map(mean,rnorm_t.test)) |>
+  unnest(samp)
+
+```
+
