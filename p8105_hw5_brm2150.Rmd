@@ -82,7 +82,7 @@ Now let's create a simulation for different mu values and 5000 iterations each.
 sim_samp = 
   expand_grid(
     mean = 0:5,
-    iter = 5000) |>
+    iter = 1:5000) |>
   mutate(samp = map(mean,rnorm_t.test)) |>
   unnest(samp)
 
