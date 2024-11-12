@@ -125,3 +125,49 @@ The average mean for all samples is very close to the true mean, but is quite sk
 
 ## Problem 3
 
+```{r}
+url = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
+homicide_dat = 
+  read_csv(url, na = "Unknown") |>
+  mutate(city_state = str_c(city, "_", state))
+
+head(homicide_dat)
+```
+The raw data contains information about homicides across 50 cities. The range of victim age is `r range(homicide_dat$victim_age)`. Below is a table of total homicides for each city as well as the unsolved murders.
+
+```{r}
+homicide_dat |>
+  group_by(city_state) |>
+  summarize(Total_Homicides = n(),
+            Unsolved_Homcides = sum(disposition %in% c("Open/No arrest", "Closed without arrest")))|>
+  knitr::kable()
+```
+
+Let's look at the proportion of murders solved in Baltimore, Maryland.
+```{r}
+baltimore_dat = 
+  homicide_dat |>
+  filter(city_state == "Baltimore_MD") |>
+  mutate(status = case_when(
+    disposition %in% c("Closed without arrest", "Closed by arrest") ~ 0,
+    disposition == "Open/No arrest" ~ 1
+  )) 
+total = 
+  baltimore_dat |>
+  drop_na(status)|>
+  nrow()
+unsolved = 
+  baltimore_dat |> 
+  pull(status) |> 
+  sum()
+
+prop.test(unsolved, total) |>
+  broom::tidy()
+```
+
+Now let's make a function for each city.
+
+```{r}
+city.prop = function()
+```
+
