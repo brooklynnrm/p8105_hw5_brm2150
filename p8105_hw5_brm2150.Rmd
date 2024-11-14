@@ -162,12 +162,51 @@ unsolved =
   sum()
 
 prop.test(unsolved, total) |>
-  broom::tidy()
+  broom::tidy() |>
+  select(estimate, conf.low, conf.high)
 ```
 
-Now let's make a function for each city.
+Now let's map a prop.test across each city.
 
 ```{r}
-city.prop = function()
+city_summary = 
+  homicide_dat |>
+  mutate(status = case_when(
+    disposition %in% c("Closed without arrest", "Closed by arrest") ~ 0,
+    disposition == "Open/No arrest" ~ 1),
+    city_state = as.factor(str_c(city, "_", state))
+    )|>
+  group_by(city_state) |>
+  summarize(total = n(),
+            unsolved = sum(status))
+
+city_prop = 
+  city_summary |>
+  mutate(prop_test = map2(.x = unsolved, .y = total, ~ prop.test(.x, .y) |> broom::tidy())
+         ) |>
+  unnest(prop_test)|>
+  select(city_state, estimate, conf.low, conf.high)
+
+city_prop |> 
+  knitr::kable(digits = 3)
+```
+
+Plotting the cities with the proportion of unsolved homicides with confidence intervals.
+
+```{r}
+city_prop |>
+  arrange(desc(estimate)) |>
+  mutate(city_state = factor(city_state, levels = city_state)) |>
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title = "Proportion of Unsolved Homicides by City",
+    x = "City and State",
+    y = "Estimated Proportion of unsolved Homicides"
+  )
 ```
 
